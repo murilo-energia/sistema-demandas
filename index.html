@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Gestão de Demandas</title>
+  <!-- Link para o CSS que está na pasta css/ -->
+  <link rel="stylesheet" href="css/style.css">
+  <!-- FontAwesome para os ícones modernos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- TELA DE LOGIN -->
+  <div id="screen-login" class="login-container">
+    <div class="login-box">
+      <div class="login-header">
+        <div class="logo-icon"><i class="fa-solid fa-layer-group"></i></div>
+        <h2>Sistema de Demandas</h2>
+        <p>Insira suas credenciais para acessar o painel</p>
+      </div>
+      <form id="form-login">
+        <div class="form-group">
+          <label for="login-email">E-mail Corporativo</label>
+          <input type="email" id="login-email" placeholder="nome@empresa.com" required>
+        </div>
+        <div class="form-group">
+          <label for="login-senha">Senha</label>
+          <input type="password" id="login-senha" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn-primary btn-block">Entrar no Sistema</button>
+        <div class="login-footer">
+          <a href="#" id="btn-recovery">Esqueceu sua senha?</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- LAYOUT PRINCIPAL (DASHBOARD) -->
+  <div id="main-layout" class="main-layout hidden">
+    <!-- BARRA LATERAL (SIDEBAR) -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <i class="fa-solid fa-cubes"></i>
+        <span>GDO Painel</span>
+      </div>
+      <div class="user-profile-info">
+        <p id="user-display-name">Carregando...</p>
+        <span id="user-display-perfil" class="badge-perfil">Operador</span>
+      </div>
+      <nav class="sidebar-menu">
+        <a href="#" class="menu-item active" data-target="view-dashboard">
+          <i class="fa-solid fa-chart-pie"></i> Dashboard
+        </a>
+        <a href="#" class="menu-item" data-target="view-kanban">
+          <i class="fa-solid fa-table-columns"></i> Quadro Kanban
+        </a>
+        <a href="#" class="menu-item adm-only" data-target="view-usuarios">
+          <i class="fa-solid fa-users-gear"></i> Gerenciar Usuários
+        </a>
+      </nav>
+      <button id="btn-logout" class="menu-item btn-logout">
+        <i class="fa-solid fa-right-from-bracket"></i> Sair do Sistema
+      </button>
+    </aside>
+
+    <!-- ÁREA DE CONTEÚDO DINÂMICO -->
+    <main class="content-area">
+      
+      <!-- SEÇÃO 1: DASHBOARD -->
+      <section id="view-dashboard" class="view-section">
+        <div class="section-header">
+          <h1>Indicadores Gerais</h1>
+          <button id="btn-nova-demanda" class="btn-primary adm-only">
+            <i class="fa-solid fa-plus"></i> Nova Demanda
+          </button>
+        </div>
+        
+        <!-- CARDS DE MÉTRICAS -->
+        <div class="metrics-grid">
+          <div class="card-metric">
+            <div class="metric-icon blue"><i class="fa-solid fa-list-check"></i></div>
+            <div class="metric-data"><h3 id="m-abertas">0</h3><p>A Fazer</p></div>
+          </div>
+          <div class="card-metric">
+            <div class="metric-icon orange"><i class="fa-solid fa-spinner"></i></div>
+            <div class="metric-data"><h3 id="m-andamento">0</h3><p>Em Andamento</p></div>
+          </div>
+          <div class="card-metric">
+            <div class="metric-icon green"><i class="fa-solid fa-circle-check"></i></div>
+            <div class="metric-data"><h3 id="m-concluidas">0</h3><p>Concluídas</p></div>
+          </div>
+          <div class="card-metric urgent">
+            <div class="metric-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="metric-data"><h3 id="m-atrasadas">0</h3><p>Atrasadas</p></div>
+          </div>
+        </div>
+
+        <div class="metrics-grid sub-metrics">
+          <div class="card-sub-metric">Conclusões Hoje: <strong id="m-hoje" style="color:var(--status-done)">0</strong></div>
+          <div class="card-sub-metric">Últimos 7 dias: <strong id="m-semana" style="color:var(--status-todo)">0</strong></div>
+        </div>
+
+        <!-- PAINÉIS DE DADOS -->
+        <div class="grid-2x1">
+          <div class="data-panel">
+            <h2><i class="fa-solid fa-chart-bar"></i> Produtividade por Operador</h2>
+            <div class="table-responsive">
+              <table id="table-produtividade">
+                <thead>
+                  <tr>
+                    <th>Operador</th>
+                    <th>A Fazer</th>
+                    <th>Em Andamento</th>
+                    <th>Concluídos</th>
+                  </tr>
+                </thead>
+                <tbody><!-- Inserido dinamicamente --></tbody>
+              </table>
+            </div>
+          </div>
+          
+          <div class="data-panel">
+            <h2><i class="fa-solid fa-clock"></i> Próximos Prazos / Alertas</h2>
+            <div id="lista-prazos" class="prazos-lista">
+              <!-- Inserido dinamicamente -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SEÇÃO 2: KANBAN -->
+      <section id="view-kanban" class="view-section hidden">
+        <div class="section-header">
+          <h1>Quadro de Atividades</h1>
+        </div>
+        <div class="kanban-board">
+          <div class="kanban-column">
+            <div class="column-header border-todo">A Fazer (<span id="count-todo">0</span>)</div>
+            <div id="col-todo" class="kanban-cards"></div>
+          </div>
+          <div class="kanban-column">
+            <div class="column-header border-doing">Em Andamento (<span id="count-doing">0</span>)</div>
+            <div id="col-doing" class="kanban-cards"></div>
+          </div>
+          <div class="kanban-column">
+            <div class="column-header border-done">Concluído (<span id="count-done">0</span>)</div>
+            <div id="col-done" class="kanban-cards"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SEÇÃO 3: USUÁRIOS -->
+      <section id="view-usuarios" class="view-section hidden">
+        <div class="section-header">
+          <h1>Controle de Operadores</h1>
+          <button id="btn-novo-usuario" class="btn-primary">
+            <i class="fa-solid fa-user-plus"></i> Novo Usuário
+          </button>
+        </div>
+        <div class="data-panel">
+          <div class="table-responsive">
+            <table id="table-users">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nome</th>
+                  <th>E-mail</th>
+                  <th>Perfil</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody><!-- Inserido dinamicamente --></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL: DEMANDA (CADASTRO/EDIÇÃO) -->
+  <div id="modal-demanda" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-demanda-titulo">Adicionar Demanda</h3>
+        <button class="close-modal">&times;</button>
+      </div>
+      <form id="form-demanda">
+        <input type="hidden" id="demanda-id">
+        <div class="form-group">
+          <label>Título da Demanda / Ordem de Serviço</label>
+          <input type="text" id="demanda-titulo-input" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Categoria</label>
+            <select id="demanda-categoria" required>
+              <option value="Manutenção Corretiva">Manutenção Corretiva</option>
+              <option value="Manutenção Preventiva">Manutenção Preventiva</option>
+              <option value="Inspeção de Segurança">Inspeção de Segurança</option>
+              <option value="Instalação/Projetos">Instalação/Projetos</option>
+              <option value="Outros">Outros</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Prioridade</label>
+            <select id="demanda-prioridade" required>
+              <option value="Baixa">Baixa</option>
+              <option value="Média" selected>Média</option>
+              <option value="Alta">Alta</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Responsável Principal (E-mail)</label>
+            <input type="email" id="demanda-responsavel" placeholder="operador@empresa.com" required>
+          </div>
+          <div class="form-group">
+            <label>Prazo Limite</label>
+            <input type="date" id="demanda-prazo" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Responsáveis Adicionais (Opcional - Separados por vírgula)</label>
+          <input type="text" id="demanda-adicionais" placeholder="ajudante1@empresa.com, ajudante2@empresa.com">
+        </div>
+        <div class="form-group">
+          <label>Descrição do Escopo / Problema</label>
+          <textarea id="demanda-descricao" rows="3" required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Histórico de Observações Técnicas (Apenas Leitura)</label>
+          <textarea id="demanda-observacoes-fixas" rows="3" readonly style="background:#f1f3f5; color:#555; font-size:12px;"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary close-modal">Cancelar</button>
+          <button type="submit" class="btn-primary">Salvar Alterações</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: USUÁRIO (CADASTRO/EDIÇÃO) -->
+  <div id="modal-usuario" class="modal hidden">
+    <div class="modal-content modal-small">
+      <div class="modal-header">
+        <h3 id="modal-user-titulo">Novo Usuário</h3>
+        <button class="close-modal">&times;</button>
+      </div>
+      <form id="form-usuario">
+        <input type="hidden" id="user-id">
+        <div class="form-group">
+          <label>Nome Completo</label>
+          <input type="text" id="user-nome" required>
+        </div>
+        <div class="form-group">
+          <label>E-mail Corporativo</label>
+          <input type="email" id="user-email" required>
+        </div>
+        <div class="form-group">
+          <label>Senha de Acesso</label>
+          <input type="text" id="user-senha" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Perfil de Acesso</label>
+            <select id="user-perfil" required>
+              <option value="Operador">Operador</option>
+              <option value="Administrador">Administrador</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="user-status" required>
+              <option value="Ativo">Ativo</option>
+              <option value="Inativo">Inativo</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary close-modal">Cancelar</button>
+          <button type="submit" class="btn-primary">Salvar Usuário</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: TRANSIÇÃO DE STATUS E OBSERVAÇÃO -->
+  <div id="modal-status-obs" class="modal hidden">
+    <div class="modal-content modal-small">
+      <div class="modal-header">
+        <h3>Justificativa / Observação</h3>
+        <button class="close-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Insira uma nota técnica ou observação sobre o andamento/conclusão:</label>
+          <textarea id="status-obs-text" rows="3" placeholder="Ex: Substituição de disjuntor concluída. Sistema em testes."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary close-modal">Voltar</button>
+        <button type="button" id="btn-status-confirmar" class="btn-primary">Confirmar e Avançar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Link para a lógica do sistema -->
+  <script src="js/app.js"></script>
+</body>
+</html>
