@@ -71,7 +71,7 @@ function configurarEventosNavegacao() {
 }
 
 // COMUNICAÇÃO COM O GOOGLE APPS SCRIPT
-async function llamarBackend(action, payload = {}) {
+async function chamarBackend(action, payload = {}) {
   try {
     const authEmail = AppState.user ? AppState.user.email : "";
     const corpo = JSON.stringify({
